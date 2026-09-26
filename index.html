@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸OvaCare-Period Tracker Dashboard</title>
+    <style>
+        :root {
+            --primary: #ff6b81;
+            --primary-hover: #ff4757;
+            --bg: #fff5f6;
+            --card-bg: #ffffff;
+            --text: #2f3542;
+            --accent: #ffccd3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard-container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(255, 107, 129, 0.1);
+            box-sizing: border-box;
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        h2, h3 {
+            color: var(--primary);
+            margin-top: 0;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: var(--primary-hover); }
+
+        .result-display {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .metric-card {
+            background: var(--bg);
+            border-left: 5px solid var(--primary);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--bg);
+        }
+
+        th { background-color: var(--bg); color: var(--primary); }
+
+        .tip-box {
+            background: #fff9fa;
+            border: 1px dashed var(--primary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <!-- HEADER -->
+    <div class="card full-width" style="text-align: center;">
+        <h1 style="color: var(--primary); margin: 0;">🌸OvaCare-Track Web</h1>
+        <p style="margin: 5px 0 0 0; color: #747d8c;">3rd Year Mini Project - Advanced Period & Fertility Dashboard</p>
+    </div>
+
+    <!-- LEFT SIDE: INPUT & CALCULATOR -->
+    <div class="card">
+        <h2>📅 Track New Cycle</h2>
+        <label for="startDate">When did your last period start?</label>
+        <input type="date" id="startDate">
+
+        <label for="cycleLength">Average Cycle Length (Days):</label>
+        <input type="number" id="cycleLength" value="28">
+
+        <label for="periodDuration">Period Duration (Days):</label>
+        <input type="number" id="periodDuration" value="5">
+
+        <button onclick="processTrackerData()">Calculate & Log Cycle</button>
+
+        <div class="result-display" id="resultContainer">
+            <h3>📊 Current Predictions</h3>
+            <div class="metric-card">
+                <strong>Next Expected Period:</strong> <span id="outNextPeriod"></span>
+            </div>
+            <div class="metric-card">
+                <strong>Estimated Fertile Window:</strong> <span id="outFertile"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: HEALTH INSIGHTS -->
+    <div class="card">
+        <h2>💡 Wellness & Health Insights</h2>
+        <div class="tip-box">
+            <strong>Hydration Tip:</strong> Stay well-hydrated during your cycle. Drink at least 8-10 glasses of water daily to avoid cramps and bloating.
+        </div>
+        <div class="tip-box">
+            <strong>Diet Advice:</strong> Include iron-rich foods like spinach, legumes, and fresh fruits in your meals to combat fatigue and weakness.
+        </div>
+        <div class="tip-box">
+            <strong>Exercise:</strong> Light stretching, walking, or yoga can significantly reduce menstrual cramps. Avoid heavy or strenuous workouts.
+        </div>
+    </div>
+
+    <!-- BOTTOM: HISTORY LOGS TABLE -->
+    <div class="card full-width">
+        <h2>📊 Historical Cycle Logs</h2>
+        <p style="font-size: 13px; color: #747d8c; margin-top: -5px;">These records are stored locally in your browser's LocalStorage and will persist even after refreshing the page.</p>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Start Date</th>
+                        <th>Cycle Length</th>
+                        <th>Duration</th>
+                        <th>Predicted Next Period</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+        <button onclick="clearSavedLogs()" style="background-color: #747d8c; margin-top: 15px; padding: 8px; font-size: 14px; max-width: 150px;">Clear Logs</button>
+    </div>
+
+</div>
+
+<script>
+    window.onload = function() {
+        renderHistoryTable();
+    };
+
+    function processTrackerData() {
+        const startDateInput = document.getElementById('startDate').value;
+        const cycleLengthInput = parseInt(document.getElementById('cycleLength').value);
+        const durationInput = parseInt(document.getElementById('periodDuration').value);
+
+        if (!startDateInput) {
+            alert("Please select a valid start date first!");
+            return;
+        }
+
+        const baseDate = new Date(startDateInput);
+        
+        // 1. Next Period Calculation
+        const nextPeriod = new Date(baseDate);
+        nextPeriod.setDate(baseDate.getDate() + cycleLengthInput);
+
+        // 2. Fertile Window Calculation
+        const ovulation = new Date(nextPeriod);
+        ovulation.setDate(nextPeriod.getDate() - 14);
+
+        const fertileStart = new Date(ovulation);
+        fertileStart.setDate(ovulation.getDate() - 5);
+
+        const fertileEnd = new Date(ovulation);
+        fertileEnd.setDate(ovulation.getDate() + 1);
+
+        const cleanDateStr = (d) => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const calculatedNext = cleanDateStr(nextPeriod);
+        const calculatedFertile = `${cleanDateStr(fertileStart)} to ${cleanDateStr(fertileEnd)}`;
+
+        document.getElementById('outNextPeriod').innerText = calculatedNext;
+        document.getElementById('outFertile').innerText = calculatedFertile;
+        document.getElementById('resultContainer').style.display = 'block';
+
+        const newLog = {
+            startDate: startDateInput,
+            cycleLength: cycleLengthInput,
+            duration: durationInput,
+            predictedNext: calculatedNext
+        };
+
+        let savedRecords = JSON.parse(localStorage.getItem('femtrack_logs')) || [];
+        savedRecords.push(newLog);
+        localStorage.setItem('femtrack_logs', JSON.stringify(savedRecords));
+
+        renderHistoryTable();
+    }
+
+    function renderHistoryTable() {
+        const tableBody = document.getElementById('historyTableBody');
+        tableBody.innerHTML = '';
+        
+        let savedRecords = JSON.parse(localStorage.getItem('femtrack_logs')) || [];
+
+        if(savedRecords.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#a4b0be;">No cycle records saved yet.</td></tr>`;
+            return;
+        }
+
+        savedRecords.forEach(record => {
+            const row = `<tr>
+                <td>${record.startDate}</td>
+                <td>${record.cycleLength} Days</td>
+                <td>${record.duration} Days</td>
+                <td><strong>${record.predictedNext}</strong></td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    function clearSavedLogs() {
+        if(confirm("Are you sure you want to delete all saved records?")) {
+            localStorage.removeItem('femtrack_logs');
+            renderHistoryTable();
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
